@@ -1,7 +1,13 @@
+/**
+ * 增加全局函数
+ * 若需要增加全局函数,请在config/lib.js里增加,注: 不要盲目增加全局函数,会使文件增大
+ * 修改全局函数目录在 config/config.js 里修改 commonLibDir 字段
+ */
 const path = require('path');
 const fs = require('fs-extra');
 const webpack = require('webpack');
 const config = require('./config');
+const lib = require('./lib');
 const helper = require('./helper');
 const glob = require('glob');
 const vueLoaderConfig = require('./vue-loader.conf');
@@ -11,31 +17,27 @@ const isWin = /^win/.test(process.platform);
 const webEntry = {};
 const weexEntry = {};
 
-//解决.temp 文件引入文件路径问题
-const changePath = (root, match)=> {
-  if(isWin) {
-    root = root.replace(/\\/g, '\\\\')
-    match = match.replace(/\//g, '\\\\')
-  }
-  return match.replace(".", root)
-}
-
 // Wraping the entry file for web.
 const getWebEntryFileContent = (entryPath, vueFilePath) => {
   let relativeVuePath = path.relative(path.join(entryPath, '../'), vueFilePath);
   let relativeEntryPath = helper.root(config.entryFilePath);
   let relativePluginPath = helper.rootNode(config.pluginFilePath);
+  let relativeLibPathArr = lib.map(item=> {
+    return {name: item.name, path: path.relative(path.join(entryPath, '../'), `${config.commonLibDir}${item.fileName}`)};
+  })
 
   let contents = '';
   let entryContents = fs.readFileSync(relativeEntryPath).toString();
   if (isWin) {
     relativeVuePath = relativeVuePath.replace(/\\/g, '\\\\');
     relativePluginPath = relativePluginPath.replace(/\\/g, '\\\\');
+
+    //获取全局函数
+    relativeLibPathArr = relativeLibPathArr.map(item=> {
+      return {name: item.name, path: item.path.replace(/\\/g, '\\\\')}
+    })
   }
   
-  //解决.temp 文件引入文件路径问题
-  entryContents = entryContents.replace(/(\'\.[\w\W]+')|(\"\.[\w\W]+")/g, match=> `${changePath(root, match)}`)
-
   if (hasPluginInstalled) {
     contents += `\n// If detact plugins/plugin.js is exist, import and the plugin.js\n`;
     contents += `import plugins from '${relativePluginPath}';\n`;
@@ -43,26 +45,64 @@ const getWebEntryFileContent = (entryPath, vueFilePath) => {
     entryContents = entryContents.replace(/weex\.init/, match => `${contents}${match}`);
     contents = ''
   }
-  contents += `
+
+  //导入函数
+relativeLibPathArr.map(item=> {
+contents += `import ${item.name} from '${item.path}'
+`;
+})
+
+//设置全局函数
+lib.map(item=> {
+contents += `Vue.prototype.$${item.name} = ${item.name};
+`;
+})
+
+contents += `
 const App = require('${relativeVuePath}');
 new Vue(Vue.util.extend({el: '#root'}, App));
 `;
   
-
   return entryContents + contents;
 }
 
 // Wraping the entry file for native.
 const getNativeEntryFileContent = (entryPath, vueFilePath) => {
   let relativeVuePath = path.relative(path.join(entryPath, '../'), vueFilePath);
+  let relativeLibPathArr = lib.map(item=> {
+    return {name: item.name, path: path.relative(path.join(entryPath, '../'), `src/common/util/${item.fileName}`)};
+  })
+
+
   let contents = '';
   if (isWin) {
     relativeVuePath = relativeVuePath.replace(/\\/g, '\\\\');
+
+    //获取全局函数
+    relativeLibPathArr = relativeLibPathArr.map(item=> {
+      return {name: item.name, path: item.path.replace(/\\/g, '\\\\')}
+    })
   }
-  contents += `import App from '${relativeVuePath}'
-App.el = '#root'
-new Vue(App)
+
+   //导入函数
+relativeLibPathArr.map(item=> {
+contents += `import ${item.name} from '${item.path}'
 `;
+})
+  
+  
+contents += `import App from '${relativeVuePath}'
+`;
+
+//设置全局函数
+lib.map(item=> {
+contents += `Vue.prototype.$${item.name} = ${item.name};
+`;
+})
+
+  contents += `App.el = '#root'
+  new Vue(App)
+  `;
   
   return contents;
 }
@@ -173,6 +213,11 @@ const webConfig = {
           })
         }],
         exclude: config.excludeModuleReg
+      },
+      {
+        test: /\.scss&/,
+        loader: 'css!sass',
+        exclude: /node_modules/
       }
     ]
   },
@@ -221,6 +266,11 @@ const weexConfig = {
           options: vueLoaderConfig({useVue: false})
         }],
         exclude: config.excludeModuleReg
+      },
+      {
+        test: /\.scss&/,
+        loader: 'css!sass',
+        exclude: /node_modules/
       }
     ]
   },

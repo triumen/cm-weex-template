@@ -1,44 +1,33 @@
 <template>
-  <div class="wrapper">
-    <image :src="logo" class="logo" />
-    <text class="greeting">The environment is ready!</text>
-    <HelloWorld/>
+  <div class="index page">
+    <cm-hello @cmClick="jump2Second"></cm-hello>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld'
+import CmHello from "./components/CmHello";
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
+  async created() {
+    this.$toast('这是首页')
   },
-  data () {
-    return {
-      logo: 'https://gw.alicdn.com/tfs/TB1yopEdgoQMeJjy1XaXXcSsFXa-640-302.png'
+  components: {
+    CmHello
+  },
+  data() {
+    return {};
+  },
+  methods: {
+    jump2Second() {
+      this.$router.push('/second')
     }
   }
-}
+};
 </script>
 
 <style scoped>
-  .wrapper {
-    justify-content: center;
-    align-items: center;
-  }
-  .logo {
-    width: 424px;
-    height: 200px;
-  }
-  .greeting {
-    text-align: center;
-    margin-top: 70px;
-    font-size: 50px;
-    color: #41B883;
-  }
-  .message {
-    margin: 30px;
-    font-size: 32px;
-    color: #727272;
-  }
+@import './common/scss/base.scss';
+.index {
+  align-items: center;
+  justify-content: center;
+}
 </style>
