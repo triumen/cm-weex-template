@@ -1,20 +1,19 @@
 
-exports.isIOS = function isIOS() {
+function isIOS() {
     const { platform } = weex.config.env;
     return platform.toLowerCase() === "ios";
 }
-
-exports.isWeb = function isWeb() {
+function isWeb() {
     const { platform } = weex.config.env;
     return typeof window === "object" && platform.toLowerCase() === "web";
 }
 
-exports.isAndroid = function isAndroid() {
+function isAndroid() {
     const { platform } = weex.config.env;
     return platform.toLowerCase() === "android";
 }
 
-exports.isIphoneX = function isIphoneX() {
+function isIphoneX() {
     const { deviceHeight } = weex.config.env;
     if (isWeb()) {
         return (
@@ -29,7 +28,7 @@ exports.isIphoneX = function isIphoneX() {
     return isIOS() && deviceHeight === 2436;
 }
 
-exports.isIphoneXSMax = function isIphoneXSMax() {
+function isIphoneXSMax() {
     const { deviceHeight } = weex.config.env;
     if (isWeb()) {
         return (
@@ -44,7 +43,7 @@ exports.isIphoneXSMax = function isIphoneXSMax() {
     return isIOS() && deviceHeight === 2688;
 }
 
-exports.isIPhoneXR = function isIPhoneXR() {
+function isIPhoneXR() {
     const { deviceHeight } = weex.config.env;
     if (isWeb()) {
         return (
@@ -59,7 +58,7 @@ exports.isIPhoneXR = function isIPhoneXR() {
     return isIOS() && deviceHeight === 1792;
 }
 
-exports.getStatusHeight = function getStatusHeight() {
+function getStatusHeight() {
     if(isIphoneX() || isIPhoneXR() || isIphoneXSMax()) {
         return 64
     }
@@ -69,4 +68,14 @@ exports.getStatusHeight = function getStatusHeight() {
     }
 
     return 0
+}
+
+module.exports = {
+    isAndroid,
+    isWeb,
+    isIOS,
+    isIphoneX,
+    isIPhoneXR,
+    isIphoneXSMax,
+    getStatusHeight
 }

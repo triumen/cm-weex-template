@@ -40,7 +40,6 @@ function push(path, params) {
 
         navigator.push({
             url: jumpUrl,
-            animated: 'true'
         }, ()=> {})
     }else {
         throw new Error('path is not found')

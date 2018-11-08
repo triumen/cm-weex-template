@@ -11,5 +11,9 @@ module.exports = [
         name: 'http',
         fileName: 'http.common.js'
     },
+    {
+        name: 'imageLoader',
+        fileName: 'imageLoader.common.js'
+    },
 
 ]
